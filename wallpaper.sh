@@ -18,7 +18,8 @@ ping_gw || (echo "no network, bye" && exit 1)
 subreddits=("wallpapers" "art" "iwallpaper")
 selectedsubreddit=${subreddits[$RANDOM % ${#subreddits[@]} ]}
 
-URL=$(wget -O - http://www.reddit.com/r/$selectedsubreddit.rss | grep -Eo "https://?[^&]+jpg" | grep -v "thumbs" | head -1);
+URLS=($(wget -O - http://www.reddit.com/r/$selectedsubreddit.rss | grep -Eo "https://?[^&]+jpg" | grep -v "thumbs"))
+URL=${URLS[$RANDOM % ${#URLS[@]} ]}
 NAME=$(basename "$URL");
 
 if [ "$DIR" ]
