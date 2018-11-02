@@ -7,8 +7,10 @@ do
  esac
 done
 
+subreddits=("wallpapers" "art" "iwallpaper")
+selectedsubreddit=${subreddits[$RANDOM % ${#subreddits[@]} ]}
 
-URL=$(wget -O - http://www.reddit.com/r/wallpapers.rss | grep -Eo "https://?[^&]+jpg" | grep -v "thumbs" | head -1);
+URL=$(wget -O - http://www.reddit.com/r/$selectedsubreddit.rss | grep -Eo "https://?[^&]+jpg" | grep -v "thumbs" | head -1);
 NAME=$(basename "$URL");
 
 if [ "$DIR" ]
