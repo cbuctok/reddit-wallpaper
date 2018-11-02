@@ -1,4 +1,5 @@
 #!/bin/bash
+
 while getopts d: option
 do
     case "${option}"
@@ -10,16 +11,22 @@ done
 
 ## Check if there's network
 function ping_gw() {
-    ping -q -w 1 -c 1 "$(ip r | grep default | cut -d ' ' -f 3)" > /dev/null && \
+    ping -q -w 1 -c 1 "imgur.com" > /dev/null && \
     return 0 || return 1
+}
+
+function get_pics_list() {
+    URLS=()
+    for sub in "$@"
+    do
+        URLS+=($(wget -q -O- http://www.reddit.com/r/$sub.rss | grep -Eo "https://?[^&]+jpg" | grep -v "thumbs"))
+    done
 }
 
 ## Get picture
 function get_pic() {
-    URLS=($(wget -O- http://www.reddit.com/r/$selectedsubreddit.rss | grep -Eo "https://?[^&]+jpg" | grep -v "thumbs"))
     URL=${URLS[$RANDOM % ${#URLS[@]} ]}
     NAME=$(basename "$URL");
-    
     if [ "$DIR" ]
     then
         FILENAME="$DIR""$NAME";
@@ -31,20 +38,18 @@ function get_pic() {
     if [ ! -f "$FILENAME" ]; then
         wget "$URL" -N -O "$FILENAME";
         sleep 1;
-        SIZE=$(file "$FILENAME" | awk -F ',' '{split($4,dimensions,"x")}END{if(dimensions[1] > 1920 && dimensions[1]/dimensions[2]>1.5) print "1"; else ""}')
-        if [ ! "$SIZE" ]
-        then
-            get_pic
-        fi
     fi
+    SIZE=$(identify -format "%W:%H" "$FILENAME" | awk -F ':' 'END{if ($1 > 1920 && $1/$2>1.5) {print "WIDE"} else {print "HIGH"}}')
 }
 
 ping_gw || (echo "no network, bye" && exit 1)
 
-subreddits=("wallpapers" "art" "iwallpaper")
-selectedsubreddit=${subreddits[$RANDOM % ${#subreddits[@]} ]}
+get_pics_list "wallpapers" "art" "iwallpaper"
 
-get_pic
+while [[ "$SIZE" != "WIDE" ]]
+do
+    get_pic
+done
 
 gsettings set org.gnome.desktop.background picture-uri nothing;
 gsettings set org.gnome.desktop.background picture-uri file://"$FILENAME";
