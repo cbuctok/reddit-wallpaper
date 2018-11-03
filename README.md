@@ -1,6 +1,11 @@
 # reddit-wallpaper
-The script set automatically the gnome Background to the top reddit wallpaper (https://www.reddit.com/r/wallpapers.rss).
+This script automatically sets a random image from one of the subreddits: r/wallpapers, r/art, r/iwallpaper.
 
 -d set storage directory
 
-Contact: https://twitter.com/m_poqq
+Bad example, but works:
+```bash
+curl -s https://raw.githubusercontent.com/cbuctok/reddit-wallpaper/multisub/wallpaper.sh | bash -s -- -d /home/$USER/Pictures/Wallpapers/
+```
+
+Thanks to: https://twitter.com/m_poqq
