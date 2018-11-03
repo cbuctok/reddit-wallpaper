@@ -1,20 +1,12 @@
 #!/bin/bash
 
-while getopts d: option
-do
-    case "${option}"
-        in
-        d) DIR=$OPTARG;;
-        *) echo "What?" && exit 1;;
-    esac
-done
-
 ## Check if there's network
 function ping_gw() {
     ping -q -w 1 -c 1 "imgur.com" > /dev/null && \
     return 0 || return 1
 }
 
+## Get a list of pictures from subreddits
 function get_pics_list() {
     URLS=()
     for sub in "$@"
@@ -23,9 +15,9 @@ function get_pics_list() {
     done
 }
 
-## Get picture
+## Download a picture from the list of pictures
 function get_pic() {
-    URL=${URLS[$RANDOM % ${#URLS[@]} ]}
+    URL=${URLS[$RANDOM % ${#URLS[@]}]}
     NAME=$(basename "$URL");
     if [ "$DIR" ]
     then
@@ -36,20 +28,38 @@ function get_pic() {
     
     ## Check if file exists
     if [ ! -f "$FILENAME" ]; then
-        wget "$URL" -N -O "$FILENAME";
+        wget "$URL" -q -O "$FILENAME";
         sleep 1;
     fi
     SIZE=$(identify -format "%W:%H" "$FILENAME" | awk -F ':' 'END{if ($1 > 1920 && $1/$2>1.5) {print "WIDE"} else {print "HIGH"}}')
 }
 
-ping_gw || (echo "no network, bye" && exit 1)
+## Find a picture based on filter
+function get_bg_image() {
+    ping_gw || (echo "no network, bye" && exit 1)
+    
+    get_pics_list "wallpapers" "art" "iwallpaper"
+    
+    while [[ "$SIZE" != "WIDE" ]]
+    do
+        get_pic
+    done
+}
 
-get_pics_list "wallpapers" "art" "iwallpaper"
+## Set wallpaper
+function set_wallpaper() {
+    gsettings set org.gnome.desktop.background picture-uri nothing;
+    gsettings set org.gnome.desktop.background picture-uri file://"$FILENAME";
+}
 
-while [[ "$SIZE" != "WIDE" ]]
+while getopts d: option
 do
-    get_pic
+    case "${option}"
+        in
+        d) DIR=$OPTARG;;
+        *) echo "What?" && exit 1;;
+    esac
 done
 
-gsettings set org.gnome.desktop.background picture-uri nothing;
-gsettings set org.gnome.desktop.background picture-uri file://"$FILENAME";
+get_bg_image
+set_wallpaper
