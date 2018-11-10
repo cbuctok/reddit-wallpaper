@@ -11,7 +11,7 @@ function get_pics_list() {
     URLS=()
     for sub in "$@"
     do
-        URLS+=($(wget -q -O- http://www.reddit.com/r/$sub.rss | grep -Eo "https://?[^&]+jpg" | grep -v "thumbs"))
+        URLS+=($(wget -q -O- http://www.reddit.com/r/$sub.rss | grep -Eo "https://?[^&]+(jpg|png)" | grep -v "thumbs"))
     done
 }
 
